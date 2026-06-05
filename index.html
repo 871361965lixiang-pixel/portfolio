@@ -329,9 +329,11 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
     </div>
   </div>
   <div class="kbh">
-    <kbd>←</kbd><kbd>→</kbd><span>切换</span>
+    <kbd>Space</kbd><span>缩放</span>
+    <kbd style="margin-left:8px">←</kbd><kbd>→</kbd><span>切换</span>
     <kbd style="margin-left:8px">Esc</kbd><span>关闭</span>
     <kbd style="margin-left:8px">滚轮</kbd><span>缩放</span>
+    <kbd style="margin-left:8px">拖拽</kbd><span>平移（放大后）</span>
   </div>
 </div>
 
@@ -390,7 +392,9 @@ function renderMasonry(d){
 }
 
 // === LIGHTBOX ===
-function openLb(i){ci=i;zo=1;updLb();document.getElementById('lbox').classList.add('open');document.getElementById('lbImg').style.transform='scale(1)';document.getElementById('zLvl').textContent='100%';document.body.style.overflow='hidden'}
+let isDrag=false,sX=0,sY=0,scrollL=0,scrollT=0;
+const lbImg=document.getElementById('lbImg');
+function openLb(i){ci=i;zo=1;updLb();document.getElementById('lbox').classList.add('open');document.getElementById('lbImg').style.transform='scale(1)';document.getElementById('zLvl').textContent='100%';document.body.style.overflow='hidden';zRst()}
 function closeLb(){document.getElementById('lbox').classList.remove('open');document.body.style.overflow=''}
 function updLb(){
   const w=AW[ci];if(!w)return;
@@ -405,13 +409,51 @@ function updLb(){
 }
 function pImg(){if(ci>0){ci--;zo=1;zRst();updLb()}}
 function nImg(){if(ci<AW.length-1){ci++;zo=1;zRst();updLb()}}
-function zImg(d){zo=Math.min(Math.max(.3,zo+d),5);document.getElementById('lbImg').style.transform='scale('+zo+')';document.getElementById('zLvl').textContent=Math.round(zo*100)+'%'}
-function togZoom(){if(zo>1){zo=1;zRst()}else{zo=2;document.getElementById('lbImg').style.transform='scale(2)';document.getElementById('zLvl').textContent='200%'};document.getElementById('lbImg').classList.toggle('zoomed')}
-function zRst(){document.getElementById('lbImg').style.transform='scale(1)';document.getElementById('zLvl').textContent='100%'}
+function zImg(d){zo=Math.min(Math.max(.3,zo+d),5);applyZoom()}
+function togZoom(){
+  if(zo>1){zo=1;zRst()}
+  else{zo=2;applyZoom()}
+  document.getElementById('lbImg').classList.toggle('zoomed')
+}
+function zRst(){zo=1;applyZoom()}
+function applyZoom(){
+  const img=document.getElementById('lbImg');
+  img.style.transform='scale('+zo+')';
+  img.style.cursor=zo>1?'grab':'zoom-in';
+  document.getElementById('zLvl').textContent=Math.round(zo*100)+'%';
+}
 
-// Keyboard
-document.addEventListener('keydown',e=>{if(!document.getElementById('lbox').classList.contains('open'))return;if(e.key==='Escape')closeLb();if(e.key==='ArrowLeft')pImg();if(e.key==='ArrowRight')nImg()});
-document.getElementById('lbox').addEventListener('wheel',e=>{if(e.target.closest('.lc')){e.preventDefault();zImg(e.deltaY>0?-.15:.15)}},{passive:false});
+// Drag to pan (when zoomed in)
+lbImg.addEventListener('mousedown',function(e){
+  if(zo<=1){togZoom();return}
+  isDrag=true;sX=e.clientX;sY=e.clientY;
+  scrollL=this.scrollLeft||0;scrollT=this.scrollTop||0;
+  this.style.cursor='grabbing';
+  e.preventDefault();
+});
+document.addEventListener('mousemove',function(e){
+  if(!isDrag)return;
+  const dx=e.clientX-sX,dy=e.clientY-sY;
+  lbImg.style.transform='scale('+zo+') translate('+(dx/zo)+'px,'+(dy/zo)+'px)';
+  lbImg.style.cursor='grabbing';
+});
+document.addEventListener('mouseup',function(){
+  if(!isDrag)return;
+  isDrag=false;
+  lbImg.style.cursor=zo>1?'grab':'zoom-in';
+});
+
+// Keyboard + wheel
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('lbox').classList.contains('open'))return;
+  if(e.key==='Escape')closeLb();
+  if(e.key==='ArrowLeft')pImg();
+  if(e.key==='ArrowRight')nImg();
+  if(e.key===' ') {e.preventDefault();togZoom()}
+});
+document.getElementById('lbox').addEventListener('wheel',e=>{
+  if(e.target.closest('.lc')){e.preventDefault();zImg(e.deltaY>0?-.15:.15)}
+},{passive:false});
 
 // === INTERACTIVE EFFECTS ===
 // Cursor glow

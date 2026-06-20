@@ -33,11 +33,11 @@ nav a.nav-cta{font-size:14px;color:#fff;text-decoration:none;padding:8px 22px;bo
 .design-accent1{top:12%;right:6%;font-size:clamp(40px,6vw,80px);letter-spacing:.35em;font-weight:300;text-transform:lowercase;color:rgba(255,255,255,.035)}
 .design-accent2{bottom:10%;left:5%;font-size:clamp(50px,8vw,110px);letter-spacing:.4em;font-style:italic;font-weight:200;color:rgba(255,255,255,.03)}
 
-/* 文本层（球之上） - iOS 26 液态玻璃 */
-.hc{position:relative;z-index:2;padding:40px 56px;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(255,255,255,.14);box-shadow:0 16px 48px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.2)}
-.hc h1{font-size:clamp(34px,5.5vw,66px);font-weight:700;letter-spacing:-.03em;margin-bottom:10px;background:linear-gradient(135deg,#f0f0ff 30%,#a78bfa 70%,#6c5ce7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 2px 24px rgba(167,139,250,.25)}
-.hc .sub{font-size:clamp(17px,2vw,23px);color:rgba(255,255,255,.55);margin-bottom:6px;opacity:0;animation:fadeUp .8s ease .4s forwards;font-weight:300;letter-spacing:5px;text-transform:uppercase}
-.hc .tagline{font-size:15px;color:rgba(255,255,255,.4);max-width:480px;opacity:0;animation:fadeUp .8s ease .6s forwards}
+/* 文本层（无框，直接叠背景） */
+.hc{position:relative;z-index:2;text-align:center}
+.hc h1{font-size:clamp(34px,5.5vw,66px);font-weight:700;letter-spacing:-.03em;margin-bottom:10px;background:linear-gradient(135deg,#f0f0ff 30%,#a78bfa 70%,#6c5ce7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 2px 40px rgba(167,139,250,.35)}
+.hc .sub{font-size:clamp(17px,2vw,23px);color:rgba(255,255,255,.7);margin-bottom:6px;opacity:0;animation:fadeUp .8s ease .4s forwards;font-weight:300;letter-spacing:5px;text-transform:uppercase}
+.hc .tagline{font-size:15px;color:rgba(255,255,255,.55);max-width:480px;opacity:0;animation:fadeUp .8s ease .6s forwards}
 .glow-line{width:80px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#6c5ce7,transparent);margin:22px auto;opacity:0;animation:fadeUp .8s ease .7s forwards}
 .cta-group{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:30px;opacity:0;animation:fadeUp .8s ease .8s forwards}
 .cta-prim{display:inline-flex;align-items:center;gap:10px;padding:16px 40px;background:linear-gradient(135deg,#6c5ce7,#a78bfa);color:#fff;border-radius:999px;font-size:16px;font-weight:500;text-decoration:none;transition:.3s;box-shadow:0 4px 30px rgba(108,92,231,.3)}

@@ -671,29 +671,28 @@ if(cDot && cRing && matchMedia('(min-width:901px)').matches){
   else window.addEventListener('load',hidePl);
 })();
 
-// 7) Hero 数字雨（Matrix 风格，藏 "design"）
+// 7) Hero 数字雨（密集 + 中间固定 "design"）
 (function(){
   const canvas=document.getElementById('rainCanvas');
   const hero=document.querySelector('.hero');
   if(!canvas||!hero)return;
   const ctx=canvas.getContext('2d');
 
-  const fontSize=15;
-  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const fontSize=12; // 更小 = 更密集
+  const dpr=Math.min(window.devicePixelRatio||1,1.5);
 
-  // 字符池：数字 + "design" 字母 + 日文 + 符号
-  const letters='designDESIGN0123456789';
-  const katakana='ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ';
-  const symbols='!@#$%^&*()_+-=[]{}|;:,.<>?/~';
-  const allChars=(letters+katakana+symbols).split('');
+  // 字符池
+  const hira='ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾁﾃﾄﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾚﾛﾜ0x8F0x9A';
+  const nums='01234567899876543210';
+  const syms='!@#$%&*_+-=[]{}|;:.<>/~';
+  const chars=(hira+nums+syms).split('');
 
-  // "design" 字母独立池，专门给"藏字"列用
   const designWord='design';
-
   let W=0,H=0;
   let columns=[];
   let mx=-9999,my=-9999;
-  let mouseInfluence=[]; // 每列的鼠标扰动偏移
+  let mouseInfluence=[];
+  let centerCol=0; // "design" 起始列索引
 
   function resize(){
     W=hero.offsetWidth;H=hero.offsetHeight;
@@ -702,37 +701,40 @@ if(cDot && cRing && matchMedia('(min-width:901px)').matches){
     ctx.setTransform(dpr,0,0,dpr,0,0);
 
     const cols=Math.ceil(W/fontSize);
+    centerCol=Math.max(0,Math.floor(cols/2)-3);
     columns=[];
     mouseInfluence=new Array(cols).fill(0);
+
     for(let i=0;i<cols;i++){
-      // 10% 的列是 "design" 字母列（让 design 隐约出现）
-      const isDesignCol=Math.random()<.1;
+      const isDesign=i>=centerCol&&i<centerCol+6; // 中间 6 列拼 "design"
+      const letterIdx=i-centerCol;
       columns.push({
         x:i*fontSize,
-        y:Math.random()*H*1.5-H*0.5,  // 起始位置错开
-        speed:.6+Math.random()*1.4,
+        y:Math.random()*H*2-H*.5,
+        speed:isDesign?.5+Math.random()*.6:.9+Math.random()*2.1,
         chars:[],
         charIdx:0,
-        isDesign:isDesignCol,
-        length:6+Math.floor(Math.random()*16), // 拖尾长度
-        trailOpacity:.4+Math.random()*.5
+        isDesign,
+        designLetter:isDesign?designWord[letterIdx]:null,
+        // design 列拖尾更长、更亮
+        length:isDesign
+          ?10+Math.floor(Math.random()*7)
+          :3+Math.floor(Math.random()*14),
+        trailOpacity:isDesign?.75:.28+Math.random()*.45,
       });
-      // 初始化字符
       const col=columns[i];
       for(let j=0;j<col.length;j++){
-        col.chars.push(isDesignCol
-          ? designWord[Math.floor(Math.random()*designWord.length)]
-          : allChars[Math.floor(Math.random()*allChars.length)]);
+        col.chars.push(col.isDesign?col.designLetter:chars[Math.floor(Math.random()*chars.length)]);
       }
     }
   }
 
   function draw(){
-    // 半透明覆盖，形成拖尾淡出
-    ctx.fillStyle='rgba(11,11,18,.06)';
+    // 慢半透明覆盖 = 更长的拖尾残留 = 更密集的视觉效果
+    ctx.fillStyle='rgba(11,11,18,.045)';
     ctx.fillRect(0,0,W,H);
 
-    ctx.font=fontSize+'px ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace';
+    ctx.font='bold '+fontSize+'px ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace';
     ctx.textBaseline='top';
 
     for(let i=0;i<columns.length;i++){
@@ -740,66 +742,77 @@ if(cDot && cRing && matchMedia('(min-width:901px)').matches){
 
       // 更新位置
       col.y+=col.speed;
-      if(col.y-col.length*fontSize>H+100){
-        col.y=-Math.random()*200;
-        col.speed=.6+Math.random()*1.4;
-        col.length=6+Math.floor(Math.random()*16);
-        col.isDesign=Math.random()<.1;
+      if(col.y-col.length*fontSize>H+80){
+        col.y=-Math.random()*250;
+        col.speed=col.isDesign
+          ?.5+Math.random()*.6
+          :.9+Math.random()*2.1;
+        col.length=col.isDesign
+          ?10+Math.floor(Math.random()*7)
+          :3+Math.floor(Math.random()*14);
+        // 重新填充字符
+        col.chars=[];
+        for(let j=0;j<col.length;j++){
+          col.chars.push(col.isDesign?col.designLetter:chars[Math.floor(Math.random()*chars.length)]);
+        }
+        col.charIdx=0;
       }
 
-      // 鼠标交互 - 横向扰动（距离鼠标近的列被推开）
+      // 鼠标扰动
       const dx=col.x-mx, dy=col.y-my;
       const dist=Math.sqrt(dx*dx+dy*dy);
-      const radius=130;
+      const radius=150;
       if(dist<radius&&dist>0){
-        // 推开方向：远离鼠标
         const push=(radius-dist)/radius;
-        const target=(dx>0?1:-1)*push*30;
-        mouseInfluence[i]+=(target-mouseInfluence[i])*.25;
+        const target=(dx>0?1:-1)*push*35;
+        mouseInfluence[i]+=(target-mouseInfluence[i])*.22;
       }else{
-        mouseInfluence[i]+=(0-mouseInfluence[i])*.08;
+        mouseInfluence[i]+=(0-mouseInfluence[i])*.1;
       }
       const offX=mouseInfluence[i];
 
-      // 绘制拖尾（从远到近）
+      // 绘制拖尾
       for(let j=col.length-1;j>=0;j--){
         const y=col.y-j*fontSize;
         if(y<-fontSize||y>H+fontSize)continue;
         const t=j/col.length;
         const alpha=(1-t)*col.trailOpacity;
 
-        // 头部（最亮，靠近鼠标更亮）
-        if(j===0){
-          let headAlpha=alpha*.95;
-          if(dist<radius){
-            headAlpha=Math.min(1,headAlpha+(radius-dist)/radius*.4);
+        if(col.isDesign){
+          // "design" 字母 - 金色/暖白，更突出
+          if(j===0&&dist<radius){
+            ctx.fillStyle='rgba(255,250,200,'+(Math.min(1,alpha+.25))+')';
+          } else if(j===0){
+            ctx.fillStyle='rgba(255,240,180,'+(alpha+.15)+')';
+          } else {
+            ctx.fillStyle='rgba(255,200,130,'+(alpha*.6)+')';
           }
-          ctx.fillStyle=`rgba(220,200,255,${headAlpha})`;
         } else {
-          // 拖尾用主品牌色
-          ctx.fillStyle=`rgba(167,139,250,${alpha*.5})`;
+          // 普通雨 - 紫色调
+          if(j===0&&dist<radius){
+            ctx.fillStyle='rgba(220,200,255,'+Math.min(1,alpha+.3)+')';
+          } else if(j===0){
+            ctx.fillStyle='rgba(180,160,255,'+alpha+')';
+          } else {
+            ctx.fillStyle='rgba(167,139,250,'+(alpha*.45)+')';
+          }
         }
         ctx.fillText(col.chars[col.charIdx+j<col.chars.length?col.charIdx+j:col.charIdx+j-col.chars.length],col.x+offX,y);
       }
 
-      // 推进字符索引
-      col.charIdx++;
+      // 推进字符索引（每秒约翻新一次整列）
+      col.charIdx+=.3;
       if(col.charIdx>=col.chars.length){
-        // 重新生成字符
         col.chars=[];
         for(let j=0;j<col.length;j++){
-          col.chars.push(col.isDesign
-            ? designWord[Math.floor(Math.random()*designWord.length)]
-            : allChars[Math.floor(Math.random()*allChars.length)]);
+          col.chars.push(col.isDesign?col.designLetter:chars[Math.floor(Math.random()*chars.length)]);
         }
         col.charIdx=0;
       }
     }
-
     requestAnimationFrame(draw);
   }
 
-  // 鼠标事件
   hero.addEventListener('mousemove',e=>{
     const rect=hero.getBoundingClientRect();
     mx=e.clientX-rect.left;my=e.clientY-rect.top;

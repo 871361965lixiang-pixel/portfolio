@@ -27,8 +27,11 @@ nav a.nav-cta{font-size:14px;color:#fff;text-decoration:none;padding:8px 22px;bo
 /* 隐藏原有 orbs/grid/particles */
 .hero-orbs,.hero-grid,.particles{display:none}
 
-/* 数字雨 canvas（Matrix 风格） */
-#rainCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.85}
+/* 背景 "design" 大字排版 */
+.bg-design{position:absolute;pointer-events:none;user-select:none;z-index:1;font-weight:900;text-transform:uppercase;color:rgba(255,255,255,.05)}
+.design-main{inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(100px,20vw,340px);letter-spacing:.25em;text-shadow:0 0 120px rgba(167,139,250,.15)}
+.design-accent1{top:12%;right:6%;font-size:clamp(40px,6vw,80px);letter-spacing:.35em;font-weight:300;text-transform:lowercase;color:rgba(255,255,255,.035)}
+.design-accent2{bottom:10%;left:5%;font-size:clamp(50px,8vw,110px);letter-spacing:.4em;font-style:italic;font-weight:200;color:rgba(255,255,255,.03)}
 
 /* 文本层（球之上） - iOS 26 液态玻璃 */
 .hc{position:relative;z-index:2;padding:40px 56px;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(255,255,255,.14);box-shadow:0 16px 48px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.2)}
@@ -199,11 +202,10 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
 /* 减弱动画（无障碍） */
 @media (prefers-reduced-motion: reduce){
   .reveal,.reveal-stagger>*,.title-split>span,.noise-overlay::after{transition:none;animation:none;opacity:1;transform:none;filter:none}
-  #rainCanvas{display:none}
 }
 
-/* 移动端关闭噪点和数字雨（性能） */
-@media (max-width:768px){.noise-overlay{display:none}#rainCanvas{opacity:.35}}
+/* 移动端 */
+@media (max-width:768px){.noise-overlay{display:none}.design-accent1,.design-accent2{display:none}}
 
 /* ===== 自定义光标 ===== */
 .cursor-dot,.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:10000;border-radius:50%;will-change:transform}
@@ -296,7 +298,9 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
 
 <!-- Hero -->
 <section class="hero">
-  <canvas id="rainCanvas"></canvas>
+  <div class="bg-design design-main">DESIGN</div>
+  <div class="bg-design design-accent1">design</div>
+  <div class="bg-design design-accent2">DESIGN</div>
   <div class="hc hero-3d" id="hero3d">
     <p class="sub">Game Visual Designer</p>
     <h1 class="title-split"><span>李</span><span>翔</span></h1>
@@ -669,159 +673,6 @@ if(cDot && cRing && matchMedia('(min-width:901px)').matches){
   const hidePl=()=>setTimeout(()=>{pl.classList.add('hidden');setTimeout(()=>pl.remove(),900)},2400);
   if(document.readyState==='complete')hidePl();
   else window.addEventListener('load',hidePl);
-})();
-
-// 7) Hero 数字雨（密集 + 中间固定 "design"）
-(function(){
-  const canvas=document.getElementById('rainCanvas');
-  const hero=document.querySelector('.hero');
-  if(!canvas||!hero)return;
-  const ctx=canvas.getContext('2d');
-
-  const fontSize=12; // 更小 = 更密集
-  const dpr=Math.min(window.devicePixelRatio||1,1.5);
-
-  // 字符池
-  const hira='ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾁﾃﾄﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾚﾛﾜ0x8F0x9A';
-  const nums='01234567899876543210';
-  const syms='!@#$%&*_+-=[]{}|;:.<>/~';
-  const chars=(hira+nums+syms).split('');
-
-  const designWord='design';
-  let W=0,H=0;
-  let columns=[];
-  let mx=-9999,my=-9999;
-  let mouseInfluence=[];
-  let centerCol=0; // "design" 起始列索引
-
-  function resize(){
-    W=hero.offsetWidth;H=hero.offsetHeight;
-    canvas.width=W*dpr;canvas.height=H*dpr;
-    canvas.style.width=W+'px';canvas.style.height=H+'px';
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-
-    const cols=Math.ceil(W/fontSize);
-    centerCol=Math.max(0,Math.floor(cols/2)-3);
-    columns=[];
-    mouseInfluence=new Array(cols).fill(0);
-
-    for(let i=0;i<cols;i++){
-      const isDesign=i>=centerCol&&i<centerCol+6; // 中间 6 列拼 "design"
-      const letterIdx=i-centerCol;
-      columns.push({
-        x:i*fontSize,
-        y:Math.random()*H*2-H*.5,
-        speed:isDesign?.5+Math.random()*.6:.9+Math.random()*2.1,
-        chars:[],
-        charIdx:0,
-        isDesign,
-        designLetter:isDesign?designWord[letterIdx]:null,
-        // design 列拖尾更长、更亮
-        length:isDesign
-          ?10+Math.floor(Math.random()*7)
-          :3+Math.floor(Math.random()*14),
-        trailOpacity:isDesign?.75:.28+Math.random()*.45,
-      });
-      const col=columns[i];
-      for(let j=0;j<col.length;j++){
-        col.chars.push(col.isDesign?col.designLetter:chars[Math.floor(Math.random()*chars.length)]);
-      }
-    }
-  }
-
-  function draw(){
-    // 慢半透明覆盖 = 更长的拖尾残留 = 更密集的视觉效果
-    ctx.fillStyle='rgba(11,11,18,.045)';
-    ctx.fillRect(0,0,W,H);
-
-    ctx.font='bold '+fontSize+'px ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace';
-    ctx.textBaseline='top';
-
-    for(let i=0;i<columns.length;i++){
-      const col=columns[i];
-
-      // 更新位置
-      col.y+=col.speed;
-      if(col.y-col.length*fontSize>H+80){
-        col.y=-Math.random()*250;
-        col.speed=col.isDesign
-          ?.5+Math.random()*.6
-          :.9+Math.random()*2.1;
-        col.length=col.isDesign
-          ?10+Math.floor(Math.random()*7)
-          :3+Math.floor(Math.random()*14);
-        // 重新填充字符
-        col.chars=[];
-        for(let j=0;j<col.length;j++){
-          col.chars.push(col.isDesign?col.designLetter:chars[Math.floor(Math.random()*chars.length)]);
-        }
-        col.charIdx=0;
-      }
-
-      // 鼠标扰动
-      const dx=col.x-mx, dy=col.y-my;
-      const dist=Math.sqrt(dx*dx+dy*dy);
-      const radius=150;
-      if(dist<radius&&dist>0){
-        const push=(radius-dist)/radius;
-        const target=(dx>0?1:-1)*push*35;
-        mouseInfluence[i]+=(target-mouseInfluence[i])*.22;
-      }else{
-        mouseInfluence[i]+=(0-mouseInfluence[i])*.1;
-      }
-      const offX=mouseInfluence[i];
-
-      // 绘制拖尾
-      for(let j=col.length-1;j>=0;j--){
-        const y=col.y-j*fontSize;
-        if(y<-fontSize||y>H+fontSize)continue;
-        const t=j/col.length;
-        const alpha=(1-t)*col.trailOpacity;
-
-        if(col.isDesign){
-          // "design" 字母 - 金色/暖白，更突出
-          if(j===0&&dist<radius){
-            ctx.fillStyle='rgba(255,250,200,'+(Math.min(1,alpha+.25))+')';
-          } else if(j===0){
-            ctx.fillStyle='rgba(255,240,180,'+(alpha+.15)+')';
-          } else {
-            ctx.fillStyle='rgba(255,200,130,'+(alpha*.6)+')';
-          }
-        } else {
-          // 普通雨 - 紫色调
-          if(j===0&&dist<radius){
-            ctx.fillStyle='rgba(220,200,255,'+Math.min(1,alpha+.3)+')';
-          } else if(j===0){
-            ctx.fillStyle='rgba(180,160,255,'+alpha+')';
-          } else {
-            ctx.fillStyle='rgba(167,139,250,'+(alpha*.45)+')';
-          }
-        }
-        ctx.fillText(col.chars[col.charIdx+j<col.chars.length?col.charIdx+j:col.charIdx+j-col.chars.length],col.x+offX,y);
-      }
-
-      // 推进字符索引（每秒约翻新一次整列）
-      col.charIdx+=.3;
-      if(col.charIdx>=col.chars.length){
-        col.chars=[];
-        for(let j=0;j<col.length;j++){
-          col.chars.push(col.isDesign?col.designLetter:chars[Math.floor(Math.random()*chars.length)]);
-        }
-        col.charIdx=0;
-      }
-    }
-    requestAnimationFrame(draw);
-  }
-
-  hero.addEventListener('mousemove',e=>{
-    const rect=hero.getBoundingClientRect();
-    mx=e.clientX-rect.left;my=e.clientY-rect.top;
-  });
-  hero.addEventListener('mouseleave',()=>{mx=-9999;my=-9999});
-
-  window.addEventListener('resize',resize);
-  resize();
-  draw();
 })();
 
 document.body.style.opacity='1';

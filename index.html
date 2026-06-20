@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>李翔 | 游戏视觉设计师</title>
+<script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
@@ -24,40 +25,26 @@ nav a.nav-cta{font-size:14px;color:#fff;text-decoration:none;padding:8px 22px;bo
 
 /* Hero */
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 40px;position:relative;overflow:hidden}
-.hero-orbs{position:absolute;inset:0;z-index:0}
-.hero-orbs .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.35;animation:orbFloat 14s ease-in-out infinite}
-.hero-orbs .orb:nth-child(1){width:500px;height:500px;background:#6c5ce7;top:-8%;left:-3%;animation-delay:0s}
-.hero-orbs .orb:nth-child(2){width:400px;height:400px;background:#a78bfa;bottom:-12%;right:-3%;animation-delay:-5s}
-.hero-orbs .orb:nth-child(3){width:280px;height:280px;background:#7c3aed;top:45%;left:65%;animation-delay:-9s;opacity:.2}
-@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(25px,-30px) scale(1.04)}50%{transform:translate(-15px,15px) scale(.96)}75%{transform:translate(35px,20px) scale(1.01)}}
+/* 隐藏原有 orbs/grid/particles（被 canvas 取代） */
+.hero-orbs,.hero-grid,.particles{display:none}
 
-.hero-grid{position:absolute;inset:0;z-index:1;opacity:.04;background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 70%)}
+/* 物理球 canvas（球堆积特效） */
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;cursor:crosshair}
 
-.particles{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
-.pt{position:absolute;border-radius:50%;background:rgba(167,139,250,.5);animation:pDrift linear infinite}
-.pt:nth-child(1){left:12%;top:25%;width:3px;height:3px;animation-duration:20s;animation-delay:0s}
-.pt:nth-child(2){left:78%;top:35%;width:5px;height:5px;animation-duration:24s;animation-delay:-3s}
-.pt:nth-child(3){left:42%;top:65%;width:3px;height:3px;animation-duration:18s;animation-delay:-6s}
-.pt:nth-child(4){left:88%;top:50%;width:4px;height:4px;animation-duration:22s;animation-delay:-9s}
-.pt:nth-child(5){left:22%;top:80%;width:2px;height:2px;animation-duration:17s;animation-delay:-2s}
-.pt:nth-child(6){left:55%;top:18%;width:4px;height:4px;animation-duration:21s;animation-delay:-5s}
-.pt:nth-child(7){left:8%;top:55%;width:3px;height:3px;animation-duration:19s;animation-delay:-8s}
-.pt:nth-child(8){left:92%;top:75%;width:5px;height:5px;animation-duration:23s;animation-delay:-4s}
-@keyframes pDrift{0%{transform:translateY(0) rotate(0);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(-130vh) rotate(720deg);opacity:0}}
-
-.hc{position:relative;z-index:2}
+/* 文本层（球之上） */
+.hc{position:relative;z-index:2;padding:32px 24px;background:radial-gradient(ellipse at center,rgba(11,11,18,.55) 0%,rgba(11,11,18,.25) 50%,transparent 75%);border-radius:24px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 .hc h1{font-size:clamp(34px,5.5vw,66px);font-weight:700;letter-spacing:-.03em;margin-bottom:10px;background:linear-gradient(135deg,#f0f0ff 30%,#a78bfa 70%,#6c5ce7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:0;animation:fadeUp .8s ease .2s forwards}
-.hc .sub{font-size:clamp(17px,2vw,23px);color:rgba(255,255,255,.45);margin-bottom:6px;opacity:0;animation:fadeUp .8s ease .4s forwards;font-weight:300;letter-spacing:5px;text-transform:uppercase}
-.hc .tagline{font-size:15px;color:rgba(255,255,255,.3);max-width:480px;opacity:0;animation:fadeUp .8s ease .6s forwards}
+.hc .sub{font-size:clamp(17px,2vw,23px);color:rgba(255,255,255,.55);margin-bottom:6px;opacity:0;animation:fadeUp .8s ease .4s forwards;font-weight:300;letter-spacing:5px;text-transform:uppercase}
+.hc .tagline{font-size:15px;color:rgba(255,255,255,.4);max-width:480px;opacity:0;animation:fadeUp .8s ease .6s forwards}
 .glow-line{width:80px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#6c5ce7,transparent);margin:22px auto;opacity:0;animation:fadeUp .8s ease .7s forwards}
 .cta-group{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:30px;opacity:0;animation:fadeUp .8s ease .8s forwards}
 .cta-prim{display:inline-flex;align-items:center;gap:10px;padding:16px 40px;background:linear-gradient(135deg,#6c5ce7,#a78bfa);color:#fff;border-radius:999px;font-size:16px;font-weight:500;text-decoration:none;transition:.3s;box-shadow:0 4px 30px rgba(108,92,231,.3)}
 .cta-prim:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 8px 40px rgba(108,92,231,.45)}
-.cta-sec{display:inline-flex;align-items:center;gap:8px;padding:16px 36px;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);border-radius:999px;font-size:15px;text-decoration:none;transition:.3s}
-.cta-sec:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.2);color:#fff}
+.cta-sec{display:inline-flex;align-items:center;gap:8px;padding:16px 36px;border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.75);border-radius:999px;font-size:15px;text-decoration:none;transition:.3s;background:rgba(11,11,18,.4);backdrop-filter:blur(8px)}
+.cta-sec:hover{background:rgba(108,92,231,.15);border-color:rgba(167,139,250,.3);color:#fff}
 .scroll-indicator{position:absolute;bottom:32px;z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;animation:fadeUp .8s ease 1.3s forwards}
-.scroll-indicator span{font-size:11px;color:rgba(255,255,255,.2);letter-spacing:3px;text-transform:uppercase}
-.sarr{width:18px;height:18px;border-right:2px solid rgba(255,255,255,.25);border-bottom:2px solid rgba(255,255,255,.25);transform:rotate(45deg);animation:sb 2s infinite}
+.scroll-indicator span{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:3px;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.sarr{width:18px;height:18px;border-right:2px solid rgba(255,255,255,.4);border-bottom:2px solid rgba(255,255,255,.4);transform:rotate(45deg);animation:sb 2s infinite;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
 @keyframes sb{0%,100%{transform:rotate(45deg) translateY(0);opacity:.3}50%{transform:rotate(45deg) translateY(8px);opacity:.8}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 
@@ -312,15 +299,7 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
 
 <!-- Hero -->
 <section class="hero">
-  <div class="hero-orbs">
-    <div class="orb"></div><div class="orb"></div><div class="orb"></div>
-  </div>
-  <div class="hero-grid"></div>
-  <div class="particles">
-    <div class="pt"></div><div class="pt"></div><div class="pt"></div>
-    <div class="pt"></div><div class="pt"></div><div class="pt"></div>
-    <div class="pt"></div><div class="pt"></div>
-  </div>
+  <canvas id="heroCanvas"></canvas>
   <div class="scanlines"></div>
   <div class="scanline-moving"></div>
   <div class="hc hero-3d" id="hero3d">
@@ -695,6 +674,141 @@ if(cDot && cRing && matchMedia('(min-width:901px)').matches){
   const hidePl=()=>setTimeout(()=>{pl.classList.add('hidden');setTimeout(()=>pl.remove(),900)},2400);
   if(document.readyState==='complete')hidePl();
   else window.addEventListener('load',hidePl);
+})();
+
+// 7) Hero 物理球堆积特效（matter.js）
+(function(){
+  if(typeof Matter==='undefined')return;
+  const canvas=document.getElementById('heroCanvas');
+  const hero=document.querySelector('.hero');
+  if(!canvas||!hero)return;
+
+  const {Engine,World,Bodies,Body,Composite,Events}=Matter;
+  const engine=Engine.create({gravity:{x:0,y:1.2}});
+  const world=engine.world;
+
+  let W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2);
+  const ctx=canvas.getContext('2d');
+  const balls=[];
+  const palette=['#6c5ce7','#a78bfa','#ec4899','#f59e0b','#0ea5e9','#8b5cf6','#f472b6','#22d3ee'];
+
+  let floorB,leftB,rightB;
+
+  function buildWalls(){
+    if(floorB)Composite.remove(world,[floorB,leftB,rightB]);
+    const wall={isStatic:true,friction:.2,restitution:.3,render:{visible:false}};
+    floorB=Bodies.rectangle(W/2,H+40,W,80,wall);
+    leftB=Bodies.rectangle(-40,H/2,80,H,wall);
+    rightB=Bodies.rectangle(W+40,H/2,80,H,wall);
+    Composite.add(world,[floorB,leftB,rightB]);
+  }
+
+  function resize(){
+    W=hero.offsetWidth;H=hero.offsetHeight;
+    canvas.width=W*dpr;canvas.height=H*dpr;
+    canvas.style.width=W+'px';canvas.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    buildWalls();
+  }
+
+  function spawnBall(x,y,sizeOverride){
+    const r=sizeOverride||(14+Math.random()*48);
+    const b=Bodies.circle(x,y,r,{
+      restitution:.45,
+      friction:.04,
+      density:.0012,
+      render:{visible:false}
+    });
+    b.color=palette[Math.floor(Math.random()*palette.length)];
+    b.radius=r;
+    b.glow=Math.random()>.7; // 30% 球带 glow
+    Composite.add(world,b);
+    balls.push(b);
+    // 上限
+    if(balls.length>80){
+      const old=balls.shift();
+      Composite.remove(world,old);
+    }
+  }
+
+  function seedBalls(n){
+    for(let i=0;i<n;i++){
+      const r=14+Math.random()*48;
+      spawnBall(50+Math.random()*(W-100),-i*70-r,r);
+    }
+  }
+
+  // 自定义渲染
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(const b of balls){
+      const{x,y}=b.position;
+      const r=b.radius;
+      // glow 圈
+      if(b.glow){
+        const g=ctx.createRadialGradient(x,y,r*.6,x,y,r*1.6);
+        g.addColorStop(0,b.color+'55');
+        g.addColorStop(1,b.color+'00');
+        ctx.fillStyle=g;
+        ctx.beginPath();ctx.arc(x,y,r*1.6,0,Math.PI*2);ctx.fill();
+      }
+      // 球主体
+      const grad=ctx.createRadialGradient(x-r*.35,y-r*.35,r*.1,x,y,r);
+      grad.addColorStop(0,'#ffffff');
+      grad.addColorStop(.25,b.color);
+      grad.addColorStop(1,b.color);
+      ctx.fillStyle=grad;
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      // 边缘高光
+      ctx.strokeStyle=b.color+'aa';
+      ctx.lineWidth=1;
+      ctx.beginPath();ctx.arc(x,y,r-.5,0,Math.PI*2);ctx.stroke();
+      // 高光点
+      ctx.fillStyle='rgba(255,255,255,.45)';
+      ctx.beginPath();ctx.arc(x-r*.4,y-r*.4,r*.25,0,Math.PI*2);ctx.fill();
+    }
+  }
+
+  function loop(){
+    Engine.update(engine,1000/60);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // 鼠标交互 - 把光标附近的球推开
+  let mx=-9999,my=-9999;
+  hero.addEventListener('mousemove',e=>{
+    const rect=hero.getBoundingClientRect();
+    mx=e.clientX-rect.left;my=e.clientY-rect.top;
+    balls.forEach(b=>{
+      const dx=b.position.x-mx,dy=b.position.y-my;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<110&&d>0){
+        const f=.0008*b.mass*(110-d);
+        Body.applyForce(b,b.position,{x:dx/d*f,y:dy/d*f});
+      }
+    });
+  });
+  hero.addEventListener('mouseleave',()=>{mx=-9999;my=-9999});
+
+  // 点击 - 在鼠标位置生成新球
+  hero.addEventListener('click',e=>{
+    if(e.target.closest('a,button'))return; // 按钮点击不生成
+    const rect=hero.getBoundingClientRect();
+    spawnBall(e.clientX-rect.left,e.clientY-rect.top);
+  });
+
+  // 持续补充球（堆稳定后从顶部继续掉，保持动态感）
+  setInterval(()=>{
+    if(balls.length<35){
+      spawnBall(80+Math.random()*(W-160),-60);
+    }
+  },2200);
+
+  window.addEventListener('resize',resize);
+  resize();
+  seedBalls(28);
+  loop();
 })();
 
 document.body.style.opacity='1';

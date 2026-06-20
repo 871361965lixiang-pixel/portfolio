@@ -660,7 +660,7 @@ if(cDot && cRing && matchMedia('(min-width:901px)').matches){
   });
 }
 
-// 6) 水面涟漪效果（鼠标滑过→涟漪扩散）
+// 6) 仿真水面流体（鼠标拖过像划过水面）
 (function(){
   const canvas=document.getElementById('dotCanvas');
   const hero=document.querySelector('.hero');
@@ -668,77 +668,108 @@ if(cDot && cRing && matchMedia('(min-width:901px)').matches){
   const ctx=canvas.getContext('2d');
   const dpr=Math.min(window.devicePixelRatio||1,2);
 
-  let W=0,H=0,t=0,mx=-9999,my=-9999;
-  let ripples=[];  // {x,y,r,alpha,maxR,ringCount}
+  const STEP=14; // 物理网格间距
+  let W=0,H=0;
+  let cols=0,rows=0;
+  let water=[]; // 每个网格单元 {z:位移, vz:速度}
+  let mx=-9999,my=-9999,active=false,t=0;
 
-  function resize(){
-    W=hero.offsetWidth;H=hero.offsetHeight;
-    canvas.width=W*dpr;canvas.height=H*dpr;
-    canvas.style.width=W+'px';canvas.style.height=H+'px';
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    ripples=[];
+  function idx(x,y){return y*cols+x;}
+
+  function init(){
+    cols=Math.ceil(W/STEP)+1;
+    rows=Math.ceil(H/STEP)+1;
+    water=new Array(cols*rows).fill(0).map(()=>({z:0,vz:0}));
+  }
+
+  function updatePhysics(){
+    // 鼠标按下水面（产生凹陷）
+    if(active&&mx>-9000){
+      const gx=Math.round(mx/STEP);
+      const gy=Math.round(my/STEP);
+      const push=.8;
+      for(let dx=-3;dx<=3;dx++){
+        for(let dy=-3;dy<=3;dy++){
+          const d=Math.sqrt(dx*dx+dy*dy);
+          if(d>3.5)continue;
+          const cx=gx+dx,cy=gy+dy;
+          if(cx<0||cx>=cols||cy<0||cy>=rows)continue;
+          water[idx(cx,cy)].vz-=push*(1-d/3.5);
+        }
+      }
+    }
+    // 弹簧 + 阻尼传播
+    for(let y=0;y<rows;y++){
+      for(let x=0;x<cols;x++){
+        const i=idx(x,y);
+        let f=0;
+        if(x>0)f+=(water[idx(x-1,y)].z-water[i].z)*.22;
+        if(x<cols-1)f+=(water[idx(x+1,y)].z-water[i].z)*.22;
+        if(y>0)f+=(water[idx(x,y-1)].z-water[i].z)*.22;
+        if(y<rows-1)f+=(water[idx(x,y+1)].z-water[i].z)*.22;
+        water[i].vz=(water[i].vz+f)*.976;
+        water[i].z+=water[i].vz;
+        water[i].z*=.995; // 额外阻尼
+      }
+    }
+  }
+
+  function getH(x,y){
+    const cx=Math.max(1,Math.min(cols-2,Math.round(x/STEP)));
+    const cy=Math.max(1,Math.min(rows-2,Math.round(y/STEP)));
+    return water[idx(cx,cy)].z;
   }
 
   function draw(){
-    t+=.008;
+    t+=.016;
+    updatePhysics();
     ctx.clearRect(0,0,W,H);
 
-    // 1) 水面纹理：透明波浪线（像水面反光）
-    ctx.strokeStyle='rgba(167,139,250,.02)';
-    ctx.lineWidth=1.2;
-    for(let y=0;y<H;y+=20){
+    // 画水平波浪线（每 3px 一行）
+    ctx.strokeStyle='rgba(167,139,250,.04)';
+    ctx.lineWidth=1;
+    for(let y=0;y<H;y+=3){
       ctx.beginPath();
-      for(let x=0;x<W;x+=6){
-        const wv=Math.sin((x+y)*.03+t*2)*Math.sin((x*2+y)*.015+t*1.5)*3;
-        ctx.lineTo(x,y+wv);
+      for(let x=0;x<W;x+=5){
+        const wv=Math.sin(x*.04+y*.03+t*1.6)*1.2
+                +Math.sin(x*.01+t*.7)*1.8
+                +Math.cos(y*.02+t*1.2)*.8;
+        const disp=getH(x,y)*.6; // 水面位移
+        ctx.lineTo(x,y+wv+disp);
       }
       ctx.stroke();
     }
 
-    // 2) 涟漪圈
-    for(let i=ripples.length-1;i>=0;i--){
-      const r=ripples[i];
-      r.r+=2.2;
-      r.alpha-=.012;
-      if(r.alpha<=0){ripples.splice(i,1);continue;}
-
-      // 外环
-      ctx.strokeStyle=`rgba(200,180,255,${r.alpha*.55})`;
-      ctx.lineWidth=1.2;
-      ctx.beginPath();ctx.arc(r.x,r.y,r.r,0,Math.PI*2);ctx.stroke();
-
-      // 中环
-      ctx.strokeStyle=`rgba(220,200,255,${r.alpha*.3})`;
-      ctx.lineWidth=.8;
-      ctx.beginPath();ctx.arc(r.x,r.y,r.r*.65,0,Math.PI*2);ctx.stroke();
-
-      // 内环
-      ctx.strokeStyle=`rgba(240,220,255,${r.alpha*.15})`;
-      ctx.lineWidth=.5;
-      ctx.beginPath();ctx.arc(r.x,r.y,r.r*.35,0,Math.PI*2);ctx.stroke();
-
-      // 中心亮点（水滴入水面那一刻的反光）
-      if(r.r<30){
-        ctx.fillStyle=`rgba(255,255,255,${r.alpha*.2*(1-r.r/30)})`;
-        ctx.beginPath();ctx.arc(r.x,r.y,6*(1-r.r/30),0,Math.PI*2);ctx.fill();
-      }
+    // 鼠标光晕（灯光在水中折射的效果）
+    if(active&&mx>-9000){
+      const g=ctx.createRadialGradient(mx,my,0,mx,my,60);
+      g.addColorStop(0,'rgba(200,180,255,.04)');
+      g.addColorStop(1,'rgba(200,180,255,0)');
+      ctx.fillStyle=g;
+      ctx.beginPath();ctx.arc(mx,my,60,0,Math.PI*2);ctx.fill();
     }
+
     requestAnimationFrame(draw);
   }
 
-  let frame=0;
   hero.addEventListener('mousemove',e=>{
     const rect=hero.getBoundingClientRect();
     mx=e.clientX-rect.left;my=e.clientY-rect.top;
-    frame++;
-    if(frame%4===0){
-      ripples.push({x:mx,y:my,r:4,alpha:.95});
-      if(ripples.length>40)ripples.shift();
-    }
+    active=true;
   });
-  hero.addEventListener('mouseleave',()=>{mx=-9999;my=-9999});
-  window.addEventListener('resize',resize);
-  resize();
+  hero.addEventListener('mouseleave',()=>{active=false});
+  window.addEventListener('resize',()=>{
+    W=hero.offsetWidth;H=hero.offsetHeight;
+    canvas.width=W*dpr;canvas.height=H*dpr;
+    canvas.style.width=W+'px';canvas.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    init();
+  });
+  W=hero.offsetWidth;H=hero.offsetHeight;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  init();
   draw();
 })();
 

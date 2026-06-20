@@ -169,27 +169,72 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
 ::-webkit-scrollbar-track{background:#0b0b12}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.14)}
+
+/* ===== ENHANCED EFFECTS ===== */
+
+/* 全站噪点叠加（提升质感） */
+.noise-overlay{position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:.07;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+
+/* 顶部滚动进度条 */
+.scroll-progress{position:fixed;top:0;left:0;height:2px;width:0;z-index:200;background:linear-gradient(90deg,#6c5ce7,#a78bfa,#ec4899);box-shadow:0 0 10px rgba(108,92,231,.6);transition:width .05s linear}
+
+/* 滚动渐入（Valentime 风格：模糊+位移） */
+.reveal{opacity:0;transform:translateY(36px);filter:blur(8px);transition:opacity .9s cubic-bezier(.22,.61,.36,1),transform .9s cubic-bezier(.22,.61,.36,1),filter .9s cubic-bezier(.22,.61,.36,1)}
+.reveal.visible{opacity:1;transform:translateY(0);filter:blur(0)}
+.reveal-stagger > *{opacity:0;transform:translateY(28px);filter:blur(6px);transition:opacity .8s cubic-bezier(.22,.61,.36,1),transform .8s cubic-bezier(.22,.61,.36,1),filter .8s cubic-bezier(.22,.61,.36,1)}
+.reveal-stagger.visible > *{opacity:1;transform:translateY(0);filter:blur(0)}
+.reveal-stagger.visible > *:nth-child(1){transition-delay:.05s}
+.reveal-stagger.visible > *:nth-child(2){transition-delay:.15s}
+.reveal-stagger.visible > *:nth-child(3){transition-delay:.25s}
+.reveal-stagger.visible > *:nth-child(4){transition-delay:.35s}
+.reveal-stagger.visible > *:nth-child(5){transition-delay:.45s}
+.reveal-stagger.visible > *:nth-child(6){transition-delay:.55s}
+
+/* 按钮光斑（鼠标跟随的彩色光圈） */
+.glow-btn{position:relative;overflow:hidden;isolation:isolate}
+.glow-btn::before{content:'';position:absolute;left:var(--mx,50%);top:var(--my,50%);width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.35),transparent 60%);transform:translate(-50%,-50%) scale(0);opacity:0;transition:transform .4s ease,opacity .4s ease;pointer-events:none;z-index:1;mix-blend-mode:plus-lighter}
+.glow-btn:hover::before{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.glow-btn > *{position:relative;z-index:2}
+
+/* Hero 3D 倾斜层 */
+.hero-3d{perspective:1200px;transform-style:preserve-3d;transition:transform .15s ease-out}
+
+/* 首屏标题字符渐入 */
+.title-split > span{display:inline-block;opacity:0;transform:translateY(40px) rotateX(-40deg);filter:blur(6px);animation:charIn .9s cubic-bezier(.22,.61,.36,1) forwards}
+.title-split > span:nth-child(1){animation-delay:.25s}
+.title-split > span:nth-child(2){animation-delay:.35s}
+@keyframes charIn{to{opacity:1;transform:translateY(0) rotateX(0);filter:blur(0)}}
+
+/* 减弱首屏动画冲突：保留原 fadeUp 但加 reveal 兼容 */
+@media (prefers-reduced-motion: reduce){
+  .reveal,.reveal-stagger>*,.title-split>span{transition:none;animation:none;opacity:1;transform:none;filter:none}
+}
+
+/* 移动端关闭噪点（性能） */
+@media (max-width:768px){.noise-overlay{display:none}}
 </style>
 </head>
 <body>
 
 <!-- Sidebar Nav -->
 <div class="sidebar" id="sidebar">
-  <a href="#" data-section="top" class="active" title="返回顶部">
+  <a href="#" data-section="top" class="active glow-btn" title="返回顶部">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
     <span class="tooltip">顶部</span>
   </a>
-  <a href="#works" data-section="works" title="精选作品">
+  <a href="#works" data-section="works" class="glow-btn" title="精选作品">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
     <span class="tooltip">作品</span>
   </a>
-  <a href="#about" data-section="about" title="联系我">
+  <a href="#about" data-section="about" class="glow-btn" title="联系我">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     <span class="tooltip">联系</span>
   </a>
 </div>
 
 <div id="cursorGlow"></div>
+<div class="scroll-progress" id="scrollProgress"></div>
+<div class="noise-overlay"></div>
 
 <nav id="nav">
   <a href="#" class="logo">LX<span>.</span></a>
@@ -210,14 +255,14 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
     <div class="pt"></div><div class="pt"></div><div class="pt"></div>
     <div class="pt"></div><div class="pt"></div>
   </div>
-  <div class="hc">
+  <div class="hc hero-3d" id="hero3d">
     <p class="sub">Game Visual Designer</p>
-    <h1>李翔</h1>
+    <h1 class="title-split"><span>李</span><span>翔</span></h1>
     <div class="glow-line"></div>
     <p class="tagline">专注游戏 KV 主视觉 · UI 界面 · 品牌 LOGO · 角色设计</p>
     <div class="cta-group">
-      <a href="#works" class="cta-prim">探索作品 ←</a>
-      <a href="#about" class="cta-sec">关于我</a>
+      <a href="#works" class="cta-prim glow-btn"><span>探索作品 ←</span></a>
+      <a href="#about" class="cta-sec glow-btn"><span>关于我</span></a>
     </div>
   </div>
   <div class="scroll-indicator">
@@ -230,9 +275,9 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
 
 <!-- Works -->
 <section class="works" id="works">
-  <h2 class="section-title">精选作品</h2>
-  <p class="section-desc" id="totalCount">加载中...</p>
-  <div class="filters" id="filters"></div>
+  <h2 class="section-title reveal">精选作品</h2>
+  <p class="section-desc reveal" id="totalCount">加载中...</p>
+  <div class="filters reveal" id="filters"></div>
   <div class="masonry-wrap" id="masonry-wrap"><div class="masonry" id="masonry"></div></div>
 </section>
 
@@ -240,7 +285,7 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
 
 <!-- About -->
 <section class="about-sec" id="about">
-  <h2 class="section-title" style="margin-bottom:36px">关于我</h2>
+  <h2 class="section-title reveal" style="margin-bottom:36px">关于我</h2>
   <div class="about-grid">
     <div class="ab-left" style="display:none">
       <div class="exp-item-wrap">
@@ -286,7 +331,7 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
       </div>
       </div>
     </div>
-    <div class="ab-right" style="max-width:480px;margin:0 auto">
+    <div class="ab-right reveal" style="max-width:480px;margin:0 auto">
       <div>
         <div class="ab-icon">LX</div>
         <div class="ab-stats">
@@ -300,7 +345,7 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
     </div>
   </div>
 
-  <div style="margin-top:40px;text-align:center">
+  <div class="reveal" style="margin-top:40px;text-align:center">
     <p style="font-size:13px;color:rgba(255,255,255,.3);margin-bottom:14px;letter-spacing:1px">扫码加微信</p>
     <div style="display:inline-block;border-radius:16px;padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)">
       <img src="/portfolio/wechat-qr.png" alt="微信二维码" style="width:150px;height:150px;display:block;border-radius:8px">
@@ -361,7 +406,8 @@ function renderFilters(){
   Object.entries(def).forEach(([k,l])=>{
     const c=WD.filter(w=>w.cat===k).length;
     const btn=document.createElement('button');
-    btn.innerHTML=l+' <span class="count">('+c+')</span>';
+    btn.className='glow-btn';
+    btn.innerHTML='<span>'+l+' <span class="count">('+c+')</span></span>';
     if(k==='kv')btn.classList.add('active');
     btn.onclick=()=>{
       document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));
@@ -496,6 +542,50 @@ window.addEventListener('scroll',()=>{
 
 // Navbar scroll
 window.addEventListener('scroll',()=>{document.getElementById('nav').classList.toggle('scrolled',scrollY>60)});
+
+// === ENHANCED EFFECTS ===
+
+// 1) 滚动渐入（IntersectionObserver，触发 .visible）
+const revealObs=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      revealObs.unobserve(e.target);
+    }
+  });
+},{threshold:.12,rootMargin:'0px 0px -60px 0px'});
+document.querySelectorAll('.reveal,.reveal-stagger').forEach(el=>revealObs.observe(el));
+
+// 2) 按钮光斑 - 鼠标在按钮内移动时更新 --mx/--my（仅作用于 .glow-btn）
+document.querySelectorAll('.glow-btn').forEach(btn=>{
+  btn.addEventListener('mousemove',e=>{
+    const r=btn.getBoundingClientRect();
+    btn.style.setProperty('--mx',(e.clientX-r.left)+'px');
+    btn.style.setProperty('--my',(e.clientY-r.top)+'px');
+  });
+});
+
+// 3) 顶部滚动进度条
+const sp=document.getElementById('scrollProgress');
+const updProgress=()=>{
+  const h=document.documentElement;
+  const pct=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100;
+  sp.style.width=pct+'%';
+};
+window.addEventListener('scroll',updProgress,{passive:true});
+updProgress();
+
+// 4) Hero 3D 倾斜 - 鼠标移动让 .hero-3d 轻微旋转
+const hero3d=document.getElementById('hero3d');
+if(hero3d){
+  const hero=document.querySelector('.hero');
+  hero.addEventListener('mousemove',e=>{
+    const x=(e.clientX/innerWidth-.5);
+    const y=(e.clientY/innerHeight-.5);
+    hero3d.style.transform=`rotateY(${x*6}deg) rotateX(${-y*6}deg)`;
+  });
+  hero.addEventListener('mouseleave',()=>{hero3d.style.transform='rotateY(0) rotateX(0)'});
+}
 
 document.body.style.opacity='1';
 </script>

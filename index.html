@@ -660,7 +660,7 @@ if(cDot && cRing && matchMedia('(min-width:901px)').matches){
   });
 }
 
-// 6) 仿真水面流体（性能优化版）
+// 6) 太阳系轨道图背景
 (function(){
   const canvas=document.getElementById('dotCanvas');
   const hero=document.querySelector('.hero');
@@ -668,91 +668,78 @@ if(cDot && cRing && matchMedia('(min-width:901px)').matches){
   const ctx=canvas.getContext('2d');
   const dpr=Math.min(window.devicePixelRatio||1,2);
 
-  const STEP=24; // 网格间距放大 = 更少节点
-  let W=0,H=0,cols=0,rows=0;
-  let water=[];  // Float32Array [z0,vz0,z1,vz1,...]
-  let mx=-9999,my=-9999,active=false,t=0;
-  let frameSkip=0;
+  let W=0,H=0,t=0,mx=-9999,my=-9999,active=false;
+  const ORBITS=6,GAP=48,SUN_R=6;
+  const planets=[
+    {d:1,s:.7,sz:3,c:'rgba(180,160,255,.55)'},
+    {d:2,s:.5,sz:4,c:'rgba(160,210,255,.5)'},
+    {d:3,s:.38,sz:5,c:'rgba(210,180,255,.5)'},
+    {d:4,s:.28,sz:3.5,c:'rgba(220,200,255,.4)'},
+    {d:5,s:.22,sz:4.5,c:'rgba(180,215,255,.4)'},
+    {d:6,s:.17,sz:3,c:'rgba(200,190,255,.35)'},
+  ];
+  let stars=[];
 
-  function init(){
-    cols=Math.ceil(W/STEP)+1;
-    rows=Math.ceil(H/STEP)+1;
-    water=new Float32Array(cols*rows*2);
-  }
-
-  function updatePhysics(){
-    if(active&&mx>-9000){
-      const gx=Math.round(mx/STEP);
-      const gy=Math.round(my/STEP);
-      for(let dx=-2;dx<=2;dx++){
-        for(let dy=-2;dy<=2;dy++){
-          const cx=gx+dx,cy=gy+dy;
-          if(cx<0||cx>=cols||cy<0||cy>=rows)continue;
-          const i=(cy*cols+cx)*2;
-          water[i+1]-=.7*(1-Math.sqrt(dx*dx+dy*dy)/2.8);
-        }
-      }
-    }
-    if(frameSkip%2===0){
-      for(let y=0;y<rows;y++){
-        for(let x=0;x<cols;x++){
-          const i=(y*cols+x)*2;
-          let f=0;
-          if(x>0)f+=(water[(y*cols+x-1)*2]-water[i])*.22;
-          if(x<cols-1)f+=(water[(y*cols+x+1)*2]-water[i])*.22;
-          if(y>0)f+=(water[((y-1)*cols+x)*2]-water[i])*.22;
-          if(y<rows-1)f+=(water[((y+1)*cols+x)*2]-water[i])*.22;
-          water[i+1]=(water[i+1]+f)*.976;
-          water[i]+=water[i+1];
-          water[i]*=.998;
-        }
-      }
-    }
-    frameSkip++;
-  }
-
-  function getH(x,y){
-    const cx=Math.round(x/STEP),cy=Math.round(y/STEP);
-    if(cx<1||cx>=cols-1||cy<1||cy>=rows-1)return 0;
-    return water[(cy*cols+cx)*2]*.6;
-  }
-
-  let waves=[];
-  function buildWaves(){
-    const n=Math.ceil(H/4);
-    waves=new Array(n);
-    for(let i=0;i<n;i++)waves[i]=Math.sin(i*4*.03)*.8+Math.cos(i*4*.02)*.5;
+  function initStars(){
+    stars=[];
+    for(let i=0;i<70;i++)stars.push({x:Math.random()*W,y:Math.random()*H,r:.5+Math.random()*1.5,a:.1+Math.random()*.25,p:Math.random()*6.28});
   }
 
   function draw(){
-    t+=.016;
-    updatePhysics();
+    t+=.01;
     ctx.clearRect(0,0,W,H);
-    ctx.strokeStyle='rgba(167,139,250,.035)';
-    ctx.lineWidth=1;
-    for(let yi=0;yi<waves.length;yi++){
-      const y=yi*4;
-      ctx.beginPath();
-      for(let x=0;x<W;x+=10){
-        const wv=Math.sin(x*.04+t*1.6)*1.2+Math.sin(x*.01+t*.7)*1.8+waves[yi];
-        ctx.lineTo(x,y+wv+getH(x,y));
-      }
-      ctx.stroke();
+
+    const cx=W*.5,cy=H*.55;
+
+    // 星星
+    for(const s of stars){
+      const a=s.a*(.7+.3*Math.sin(t*.5+s.p));
+      ctx.fillStyle=`rgba(255,255,255,${a})`;
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fill();
     }
+
+    // 轨道环
+    ctx.strokeStyle='rgba(167,139,250,.045)';
+    ctx.lineWidth=.8;
+    for(let i=1;i<=ORBITS;i++){
+      ctx.beginPath();ctx.arc(cx,cy,i*GAP,0,6.28);ctx.stroke();
+    }
+
+    // 太阳辉光
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,SUN_R*4);
+    g.addColorStop(0,'rgba(220,200,255,.18)');
+    g.addColorStop(.3,'rgba(167,139,250,.06)');
+    g.addColorStop(1,'rgba(167,139,250,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath();ctx.arc(cx,cy,SUN_R*4,0,6.28);ctx.fill();
+    ctx.fillStyle='rgba(230,220,255,.12)';
+    ctx.beginPath();ctx.arc(cx,cy,SUN_R,0,6.28);ctx.fill();
+
+    // 行星
+    for(const p of planets){
+      const ang=t*p.s+p.d*.3;
+      const px=cx+Math.cos(ang)*p.d*GAP;
+      const py=cy+Math.sin(ang)*p.d*GAP;
+      ctx.fillStyle=p.c;
+      ctx.beginPath();ctx.arc(px,py,p.sz,0,6.28);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.35)';
+      ctx.beginPath();ctx.arc(px-p.sz*.2,py-p.sz*.2,p.sz*.3,0,6.28);ctx.fill();
+    }
+
+    // 鼠标柔光
     if(active&&mx>-9000){
-      const g=ctx.createRadialGradient(mx,my,0,mx,my,50);
-      g.addColorStop(0,'rgba(200,180,255,.035)');
-      g.addColorStop(1,'rgba(200,180,255,0)');
-      ctx.fillStyle=g;
-      ctx.beginPath();ctx.arc(mx,my,50,0,Math.PI*2);ctx.fill();
+      const g2=ctx.createRadialGradient(mx,my,0,mx,my,55);
+      g2.addColorStop(0,'rgba(200,180,255,.02)');
+      g2.addColorStop(1,'rgba(200,180,255,0)');
+      ctx.fillStyle=g2;
+      ctx.beginPath();ctx.arc(mx,my,55,0,6.28);ctx.fill();
     }
     requestAnimationFrame(draw);
   }
 
   hero.addEventListener('mousemove',e=>{
-    const rect=hero.getBoundingClientRect();
-    mx=e.clientX-rect.left;my=e.clientY-rect.top;
-    active=true;
+    const r=hero.getBoundingClientRect();
+    mx=e.clientX-r.left;my=e.clientY-r.top;active=true;
   });
   hero.addEventListener('mouseleave',()=>{active=false;mx=-9999;my=-9999});
   window.addEventListener('resize',()=>{
@@ -760,13 +747,13 @@ if(cDot && cRing && matchMedia('(min-width:901px)').matches){
     canvas.width=W*dpr;canvas.height=H*dpr;
     canvas.style.width=W+'px';canvas.style.height=H+'px';
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    init();buildWaves();
+    initStars();
   });
   W=hero.offsetWidth;H=hero.offsetHeight;
   canvas.width=W*dpr;canvas.height=H*dpr;
   canvas.style.width=W+'px';canvas.style.height=H+'px';
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  init();buildWaves();
+  initStars();
   draw();
 })();
 

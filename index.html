@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>李翔 | 游戏视觉设计师</title>
-<script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
@@ -13,9 +12,9 @@ body{background:#0b0b12;color:#e8e8f0;line-height:1.6;overflow-x:hidden}
 /* Cursor glow */
 #cursorGlow{position:fixed;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(99,70,255,.12),transparent 65%);pointer-events:none;z-index:0;transform:translate(-50%,-50%);transition:left .06s ease,top .06s ease}
 
-/* Navbar */
+/* Navbar - iOS 26 玻璃 */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;transition:.4s}
-nav.scrolled{background:rgba(11,11,18,.8);backdrop-filter:blur(20px) saturate(1.5);border-bottom:1px solid rgba(255,255,255,.05)}
+nav.scrolled{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.1);box-shadow:0 8px 32px rgba(0,0,0,.2)}
 nav .logo{font-size:20px;font-weight:600;color:#fff;text-decoration:none;letter-spacing:-.5px}
 nav .logo span{background:linear-gradient(135deg,#6c5ce7,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 nav .nav-links{display:flex;align-items:center;gap:6px}
@@ -25,22 +24,22 @@ nav a.nav-cta{font-size:14px;color:#fff;text-decoration:none;padding:8px 22px;bo
 
 /* Hero */
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 40px;position:relative;overflow:hidden}
-/* 隐藏原有 orbs/grid/particles（被 canvas 取代） */
+/* 隐藏原有 orbs/grid/particles */
 .hero-orbs,.hero-grid,.particles{display:none}
 
-/* 物理球 canvas（球堆积特效） */
-#heroCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;cursor:crosshair}
+/* 数字雨 canvas（Matrix 风格） */
+#rainCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.85}
 
-/* 文本层（球之上） */
-.hc{position:relative;z-index:2;padding:32px 24px;background:radial-gradient(ellipse at center,rgba(11,11,18,.55) 0%,rgba(11,11,18,.25) 50%,transparent 75%);border-radius:24px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
-.hc h1{font-size:clamp(34px,5.5vw,66px);font-weight:700;letter-spacing:-.03em;margin-bottom:10px;background:linear-gradient(135deg,#f0f0ff 30%,#a78bfa 70%,#6c5ce7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:0;animation:fadeUp .8s ease .2s forwards}
+/* 文本层（球之上） - iOS 26 液态玻璃 */
+.hc{position:relative;z-index:2;padding:40px 56px;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(255,255,255,.14);box-shadow:0 16px 48px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.2)}
+.hc h1{font-size:clamp(34px,5.5vw,66px);font-weight:700;letter-spacing:-.03em;margin-bottom:10px;background:linear-gradient(135deg,#f0f0ff 30%,#a78bfa 70%,#6c5ce7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 2px 24px rgba(167,139,250,.25)}
 .hc .sub{font-size:clamp(17px,2vw,23px);color:rgba(255,255,255,.55);margin-bottom:6px;opacity:0;animation:fadeUp .8s ease .4s forwards;font-weight:300;letter-spacing:5px;text-transform:uppercase}
 .hc .tagline{font-size:15px;color:rgba(255,255,255,.4);max-width:480px;opacity:0;animation:fadeUp .8s ease .6s forwards}
 .glow-line{width:80px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#6c5ce7,transparent);margin:22px auto;opacity:0;animation:fadeUp .8s ease .7s forwards}
 .cta-group{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:30px;opacity:0;animation:fadeUp .8s ease .8s forwards}
 .cta-prim{display:inline-flex;align-items:center;gap:10px;padding:16px 40px;background:linear-gradient(135deg,#6c5ce7,#a78bfa);color:#fff;border-radius:999px;font-size:16px;font-weight:500;text-decoration:none;transition:.3s;box-shadow:0 4px 30px rgba(108,92,231,.3)}
 .cta-prim:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 8px 40px rgba(108,92,231,.45)}
-.cta-sec{display:inline-flex;align-items:center;gap:8px;padding:16px 36px;border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.75);border-radius:999px;font-size:15px;text-decoration:none;transition:.3s;background:rgba(11,11,18,.4);backdrop-filter:blur(8px)}
+.cta-sec{display:inline-flex;align-items:center;gap:8px;padding:16px 36px;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.85);border-radius:999px;font-size:15px;text-decoration:none;transition:.3s;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
 .cta-sec:hover{background:rgba(108,92,231,.15);border-color:rgba(167,139,250,.3);color:#fff}
 .scroll-indicator{position:absolute;bottom:32px;z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;animation:fadeUp .8s ease 1.3s forwards}
 .scroll-indicator span{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:3px;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.5)}
@@ -56,18 +55,18 @@ section{position:relative;z-index:1}
 .section-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);margin:0 auto}
 
 /* Filters */
-.filters{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:32px}
-.filters button{padding:9px 20px;border-radius:999px;font-size:13px;font-weight:500;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:rgba(255,255,255,.5);cursor:pointer;transition:.3s;white-space:nowrap}
-.filters button:hover{border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.75);background:rgba(255,255,255,.06)}
-.filters button.active{background:linear-gradient(135deg,#6c5ce7,#a78bfa);color:#fff;border-color:transparent;box-shadow:0 4px 20px rgba(108,92,231,.3)}
+.filters{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:32px}
+.filters button{padding:10px 22px;border-radius:999px;font-size:13px;font-weight:500;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);color:rgba(255,255,255,.6);cursor:pointer;transition:.3s;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.filters button:hover{border-color:rgba(255,255,255,.22);color:#fff;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.04))}
+.filters button.active{background:linear-gradient(135deg,#6c5ce7,#a78bfa);color:#fff;border-color:transparent;box-shadow:0 4px 20px rgba(108,92,231,.4),inset 0 1px 0 rgba(255,255,255,.25)}
 .filters button .count{font-size:11px;opacity:.5;margin-left:4px}
 .filters button.active .count{opacity:.8}
 
 /* Masonry */
 .masonry{column-count:4;column-gap:16px}
-.mitem{break-inside:avoid;margin-bottom:16px;border-radius:14px;overflow:hidden;cursor:pointer;position:relative;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);transition:.4s;opacity:0;transform:translateY(30px)}
+.mitem{break-inside:avoid;margin-bottom:16px;border-radius:18px;overflow:hidden;cursor:pointer;position:relative;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);box-shadow:0 8px 32px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.1);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);transition:.4s;opacity:0;transform:translateY(30px)}
 .mitem.visible{opacity:1;transform:translateY(0)}
-.mitem:hover{transform:translateY(-4px);border-color:rgba(167,139,250,.3);box-shadow:0 12px 40px rgba(108,92,231,.12)}
+.mitem:hover{transform:translateY(-4px);border-color:rgba(167,139,250,.3);box-shadow:0 16px 48px rgba(108,92,231,.2),inset 0 1px 0 rgba(255,255,255,.18)}
 .mitem img{display:block;width:100%;height:auto;transition:.5s}
 .mitem.tall img{height:460px;object-fit:cover}
 .mitem:hover img{transform:scale(1.05)}
@@ -100,8 +99,8 @@ section{position:relative;z-index:1}
 .lc .ibar .badge{padding:5px 14px;border-radius:6px;font-size:12px;font-weight:500;color:#fff;white-space:nowrap}
 .lc .ibar .ttl{color:rgba(255,255,255,.75);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lc .nbtns{display:flex;gap:8px;align-items:center}
-.lc .nbtns button{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.7);cursor:pointer;font-size:16px;transition:.2s;display:flex;align-items:center;justify-content:center}
-.lc .nbtns button:hover{background:rgba(255,255,255,.1)}
+.lc .nbtns button{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));color:rgba(255,255,255,.85);cursor:pointer;font-size:16px;transition:.2s;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.lc .nbtns button:hover{background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.06))}
 .lc .nbtns button:disabled{opacity:.15;cursor:not-allowed}
 .zc{display:flex;gap:4px;align-items:center}
 .zc button{width:32px;height:32px;border-radius:6px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);cursor:pointer;font-size:13px;transition:.2s;display:flex;align-items:center;justify-content:center}
@@ -124,7 +123,8 @@ section{position:relative;z-index:1}
 @media(max-width:600px){.exp-grid{grid-template-columns:1fr}}
 .ab-left p{color:rgba(255,255,255,.55);font-size:15px;margin-bottom:14px;line-height:1.85;text-align:center;max-width:620px;margin-left:auto;margin-right:auto}
 
-.ab-right>div{background:linear-gradient(135deg,rgba(108,92,231,.08),rgba(167,139,250,.04));border-radius:20px;padding:40px 36px;border:1px solid rgba(255,255,255,.04);max-width:480px;margin:0 auto}
+.ab-right>div{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border-radius:24px;padding:40px 36px;border:1px solid rgba(255,255,255,.14);max-width:480px;margin:0 auto;backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);box-shadow:0 16px 48px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.2);position:relative;overflow:hidden}
+.ab-right>div::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);pointer-events:none}
 .ab-icon{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,#6c5ce7,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;margin-bottom:20px;font-weight:600}
 .ab-stats{font-size:13px;color:rgba(255,255,255,.4);line-height:2.6}
 .ab-stats>div{display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.04);padding:10px 0}
@@ -139,7 +139,7 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
 /* Sidebar navigation */
 .sidebar{position:fixed;right:24px;top:50%;transform:translateY(-50%);z-index:90;display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0;transition:opacity .5s ease}
 .sidebar.show{opacity:1}
-.sidebar a{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.35);text-decoration:none;font-size:12px;position:relative;transition:.3s}
+.sidebar a{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.45);text-decoration:none;font-size:12px;position:relative;transition:.3s;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.15)}
 .sidebar a:hover{background:rgba(108,92,231,.12);border-color:rgba(108,92,231,.25);color:#c4b5fd}
 .sidebar a.active{background:linear-gradient(135deg,rgba(108,92,231,.15),rgba(167,139,250,.08));border-color:rgba(108,92,231,.3);color:#a78bfa;box-shadow:0 0 20px rgba(108,92,231,.1)}
 .sidebar a .tooltip{position:absolute;right:56px;padding:5px 12px;border-radius:6px;background:rgba(20,20,30,.9);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.7);font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:.2s}
@@ -192,26 +192,18 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
 /* Hero 3D 倾斜层（加强：幅度 12° + z 位移） */
 .hero-3d{perspective:1500px;transform-style:preserve-3d;transition:transform .25s cubic-bezier(.22,.61,.36,1)}
 
-/* 首屏标题字符渐入（取消 blur，只保留位移+淡入） */
+/* 首屏标题（立刻显示，0 动画） */
 .title-split{display:inline-block;position:relative}
-.title-split > span{display:inline-block;opacity:0;transform:translateY(28px);animation:charIn .8s cubic-bezier(.22,.61,.36,1) forwards}
-.title-split > span:nth-child(1){animation-delay:.3s}
-.title-split > span:nth-child(2){animation-delay:.42s}
-@keyframes charIn{to{opacity:1;transform:translateY(0)}}
-
-/* Hero 扫描线（游戏 UI 感） */
-.scanlines{position:absolute;inset:0;z-index:3;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(255,255,255,.015) 2px,rgba(255,255,255,.015) 3px);mix-blend-mode:overlay;opacity:.6}
-.scanline-moving{position:absolute;left:0;right:0;height:120px;background:linear-gradient(180deg,transparent 0%,rgba(167,139,250,.08) 50%,transparent 100%);animation:scanMove 6s linear infinite;pointer-events:none;z-index:3;mix-blend-mode:screen}
-@keyframes scanMove{0%{top:-20%}100%{top:120%}}
+.title-split > span{display:inline-block;opacity:1;transform:none;animation:none}
 
 /* 减弱动画（无障碍） */
 @media (prefers-reduced-motion: reduce){
-  .reveal,.reveal-stagger>*,.title-split>span,.scanline-moving,.noise-overlay::after{transition:none;animation:none;opacity:1;transform:none;filter:none}
-  .scanlines,.scanline-moving{display:none}
+  .reveal,.reveal-stagger>*,.title-split>span,.noise-overlay::after{transition:none;animation:none;opacity:1;transform:none;filter:none}
+  #rainCanvas{display:none}
 }
 
-/* 移动端关闭噪点和扫描线（性能） */
-@media (max-width:768px){.noise-overlay,.scanlines,.scanline-moving{display:none}}
+/* 移动端关闭噪点和数字雨（性能） */
+@media (max-width:768px){.noise-overlay{display:none}#rainCanvas{opacity:.35}}
 
 /* ===== 自定义光标 ===== */
 .cursor-dot,.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:10000;border-radius:50%;will-change:transform}
@@ -222,6 +214,11 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
 
 /* 隐藏默认光标（仅在自定义光标启用时） */
 @media (min-width:901px){html.has-custom-cursor,html.has-custom-cursor *{cursor:none !important}}
+
+/* ===== iOS 26 液态玻璃（可复用） ===== */
+.ios26-glass{background:linear-gradient(180deg,rgba(255,255,255,.1) 0%,rgba(255,255,255,.04) 100%);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(255,255,255,.14);box-shadow:0 8px 32px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.2);position:relative;overflow:hidden}
+.ios26-glass::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);pointer-events:none}
+.ios26-glass:hover{border-color:rgba(255,255,255,.22);box-shadow:0 12px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.25),inset 0 -1px 0 rgba(0,0,0,.2)}
 
 /* ===== 首屏 Preloader ===== */
 .preloader{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at center,#1a1330 0%,#0b0b12 60%,#050508 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease,visibility .8s ease}
@@ -299,9 +296,7 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
 
 <!-- Hero -->
 <section class="hero">
-  <canvas id="heroCanvas"></canvas>
-  <div class="scanlines"></div>
-  <div class="scanline-moving"></div>
+  <canvas id="rainCanvas"></canvas>
   <div class="hc hero-3d" id="hero3d">
     <p class="sub">Game Visual Designer</p>
     <h1 class="title-split"><span>李</span><span>翔</span></h1>
@@ -394,7 +389,7 @@ footer{text-align:center;padding:32px;border-top:1px solid rgba(255,255,255,.04)
 
   <div class="reveal" style="margin-top:40px;text-align:center">
     <p style="font-size:13px;color:rgba(255,255,255,.3);margin-bottom:14px;letter-spacing:1px">扫码加微信</p>
-    <div style="display:inline-block;border-radius:16px;padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)">
+    <div style="display:inline-block;border-radius:20px;padding:12px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)">
       <img src="/portfolio/wechat-qr.png" alt="微信二维码" style="width:150px;height:150px;display:block;border-radius:8px">
     </div>
     <p style="font-size:12px;color:rgba(255,255,255,.2);margin-top:10px">微信 · 请备注来意</p>
@@ -676,167 +671,144 @@ if(cDot && cRing && matchMedia('(min-width:901px)').matches){
   else window.addEventListener('load',hidePl);
 })();
 
-// 7) Hero 物理球堆积特效（matter.js）
+// 7) Hero 数字雨（Matrix 风格，藏 "design"）
 (function(){
-  if(typeof Matter==='undefined')return;
-  const canvas=document.getElementById('heroCanvas');
+  const canvas=document.getElementById('rainCanvas');
   const hero=document.querySelector('.hero');
   if(!canvas||!hero)return;
-
-  const {Engine,World,Bodies,Body,Composite,Events}=Matter;
-  const engine=Engine.create({gravity:{x:0,y:1.2}});
-  const world=engine.world;
-
-  let W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2);
   const ctx=canvas.getContext('2d');
-  const balls=[];
-  // 调色板：偏淡的粉彩色，让球看起来像毛玻璃
-  const palette=['#a8a0f5','#c0b0ff','#f5a8d0','#f5c890','#90c8f5','#b8a0f5','#f5b8d8','#a0d8e8'];
 
-  let floorB,leftB,rightB;
+  const fontSize=15;
+  const dpr=Math.min(window.devicePixelRatio||1,2);
 
-  function buildWalls(){
-    if(floorB)Composite.remove(world,[floorB,leftB,rightB]);
-    const wall={isStatic:true,friction:.2,restitution:.3,render:{visible:false}};
-    floorB=Bodies.rectangle(W/2,H+40,W,80,wall);
-    leftB=Bodies.rectangle(-40,H/2,80,H,wall);
-    rightB=Bodies.rectangle(W+40,H/2,80,H,wall);
-    Composite.add(world,[floorB,leftB,rightB]);
-  }
+  // 字符池：数字 + "design" 字母 + 日文 + 符号
+  const letters='designDESIGN0123456789';
+  const katakana='ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ';
+  const symbols='!@#$%^&*()_+-=[]{}|;:,.<>?/~';
+  const allChars=(letters+katakana+symbols).split('');
+
+  // "design" 字母独立池，专门给"藏字"列用
+  const designWord='design';
+
+  let W=0,H=0;
+  let columns=[];
+  let mx=-9999,my=-9999;
+  let mouseInfluence=[]; // 每列的鼠标扰动偏移
 
   function resize(){
     W=hero.offsetWidth;H=hero.offsetHeight;
     canvas.width=W*dpr;canvas.height=H*dpr;
     canvas.style.width=W+'px';canvas.style.height=H+'px';
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    buildWalls();
-  }
 
-  function spawnBall(x,y,sizeOverride){
-    const r=sizeOverride||(14+Math.random()*48);
-    const b=Bodies.circle(x,y,r,{
-      restitution:.45,
-      friction:.04,
-      density:.0012,
-      render:{visible:false}
-    });
-    b.color=palette[Math.floor(Math.random()*palette.length)];
-    b.radius=r;
-    b.glow=Math.random()>.7; // 30% 球带 glow
-    Composite.add(world,b);
-    balls.push(b);
-    // 上限
-    if(balls.length>80){
-      const old=balls.shift();
-      Composite.remove(world,old);
+    const cols=Math.ceil(W/fontSize);
+    columns=[];
+    mouseInfluence=new Array(cols).fill(0);
+    for(let i=0;i<cols;i++){
+      // 10% 的列是 "design" 字母列（让 design 隐约出现）
+      const isDesignCol=Math.random()<.1;
+      columns.push({
+        x:i*fontSize,
+        y:Math.random()*H*1.5-H*0.5,  // 起始位置错开
+        speed:.6+Math.random()*1.4,
+        chars:[],
+        charIdx:0,
+        isDesign:isDesignCol,
+        length:6+Math.floor(Math.random()*16), // 拖尾长度
+        trailOpacity:.4+Math.random()*.5
+      });
+      // 初始化字符
+      const col=columns[i];
+      for(let j=0;j<col.length;j++){
+        col.chars.push(isDesignCol
+          ? designWord[Math.floor(Math.random()*designWord.length)]
+          : allChars[Math.floor(Math.random()*allChars.length)]);
+      }
     }
   }
 
-  function seedBalls(n){
-    for(let i=0;i<n;i++){
-      const r=14+Math.random()*48;
-      spawnBall(50+Math.random()*(W-100),-i*70-r,r);
-    }
-  }
-
-  // 自定义渲染 - 毛玻璃球
   function draw(){
-    ctx.clearRect(0,0,W,H);
-    for(const b of balls){
-      const{x,y}=b.position;
-      const r=b.radius;
-      ctx.save();
+    // 半透明覆盖，形成拖尾淡出
+    ctx.fillStyle='rgba(11,11,18,.06)';
+    ctx.fillRect(0,0,W,H);
 
-      // 1) 外层柔光晕
-      if(b.glow){
-        const halo=ctx.createRadialGradient(x,y,r*.5,x,y,r*2);
-        halo.addColorStop(0,b.color+'55');
-        halo.addColorStop(.5,b.color+'18');
-        halo.addColorStop(1,b.color+'00');
-        ctx.fillStyle=halo;
-        ctx.beginPath();ctx.arc(x,y,r*2,0,Math.PI*2);ctx.fill();
+    ctx.font=fontSize+'px ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace';
+    ctx.textBaseline='top';
+
+    for(let i=0;i<columns.length;i++){
+      const col=columns[i];
+
+      // 更新位置
+      col.y+=col.speed;
+      if(col.y-col.length*fontSize>H+100){
+        col.y=-Math.random()*200;
+        col.speed=.6+Math.random()*1.4;
+        col.length=6+Math.floor(Math.random()*16);
+        col.isDesign=Math.random()<.1;
       }
 
-      // 2) 球主体 - 上下渐变（顶亮→中色→底微亮），剪裁到圆形内
-      ctx.beginPath();
-      ctx.arc(x,y,r,0,Math.PI*2);
-      ctx.clip();
+      // 鼠标交互 - 横向扰动（距离鼠标近的列被推开）
+      const dx=col.x-mx, dy=col.y-my;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      const radius=130;
+      if(dist<radius&&dist>0){
+        // 推开方向：远离鼠标
+        const push=(radius-dist)/radius;
+        const target=(dx>0?1:-1)*push*30;
+        mouseInfluence[i]+=(target-mouseInfluence[i])*.25;
+      }else{
+        mouseInfluence[i]+=(0-mouseInfluence[i])*.08;
+      }
+      const offX=mouseInfluence[i];
 
-      const body=ctx.createLinearGradient(x,y-r,x,y+r);
-      body.addColorStop(0,'rgba(255,255,255,.65)');     // 顶部高光
-      body.addColorStop(.35,b.color+'cc');              // 上半主色
-      body.addColorStop(.65,b.color+'99');              // 下半主色（更深更透）
-      body.addColorStop(1,'rgba(255,255,255,.25)');     // 底部反光
-      ctx.fillStyle=body;
-      ctx.fillRect(x-r,y-r,r*2,r*2);
+      // 绘制拖尾（从远到近）
+      for(let j=col.length-1;j>=0;j--){
+        const y=col.y-j*fontSize;
+        if(y<-fontSize||y>H+fontSize)continue;
+        const t=j/col.length;
+        const alpha=(1-t)*col.trailOpacity;
 
-      // 3) 镜面高光（左上 specular）
-      const spec=ctx.createRadialGradient(x-r*.3,y-r*.4,0,x-r*.3,y-r*.4,r*.9);
-      spec.addColorStop(0,'rgba(255,255,255,.85)');
-      spec.addColorStop(.4,'rgba(255,255,255,.2)');
-      spec.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=spec;
-      ctx.fillRect(x-r,y-r,r*2,r*2);
+        // 头部（最亮，靠近鼠标更亮）
+        if(j===0){
+          let headAlpha=alpha*.95;
+          if(dist<radius){
+            headAlpha=Math.min(1,headAlpha+(radius-dist)/radius*.4);
+          }
+          ctx.fillStyle=`rgba(220,200,255,${headAlpha})`;
+        } else {
+          // 拖尾用主品牌色
+          ctx.fillStyle=`rgba(167,139,250,${alpha*.5})`;
+        }
+        ctx.fillText(col.chars[col.charIdx+j<col.chars.length?col.charIdx+j:col.charIdx+j-col.chars.length],col.x+offX,y);
+      }
 
-      // 4) 底部微反射（玻璃球特征）
-      const bottom=ctx.createRadialGradient(x+r*.15,y+r*.35,0,x+r*.15,y+r*.35,r*.4);
-      bottom.addColorStop(0,'rgba(255,255,255,.4)');
-      bottom.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=bottom;
-      ctx.fillRect(x-r,y-r,r*2,r*2);
-
-      // 5) 圆形外描边（rim light）
-      ctx.restore();
-      ctx.strokeStyle='rgba(255,255,255,.5)';
-      ctx.lineWidth=1.5;
-      ctx.beginPath();ctx.arc(x,y,r-.5,0,Math.PI*2);ctx.stroke();
-
-      // 6) 左上小高光点
-      ctx.fillStyle='rgba(255,255,255,.9)';
-      ctx.beginPath();ctx.arc(x-r*.45,y-r*.45,r*.12,0,Math.PI*2);ctx.fill();
+      // 推进字符索引
+      col.charIdx++;
+      if(col.charIdx>=col.chars.length){
+        // 重新生成字符
+        col.chars=[];
+        for(let j=0;j<col.length;j++){
+          col.chars.push(col.isDesign
+            ? designWord[Math.floor(Math.random()*designWord.length)]
+            : allChars[Math.floor(Math.random()*allChars.length)]);
+        }
+        col.charIdx=0;
+      }
     }
+
+    requestAnimationFrame(draw);
   }
 
-  function loop(){
-    Engine.update(engine,1000/60);
-    draw();
-    requestAnimationFrame(loop);
-  }
-
-  // 鼠标交互 - 把光标附近的球推开
-  let mx=-9999,my=-9999;
+  // 鼠标事件
   hero.addEventListener('mousemove',e=>{
     const rect=hero.getBoundingClientRect();
     mx=e.clientX-rect.left;my=e.clientY-rect.top;
-    balls.forEach(b=>{
-      const dx=b.position.x-mx,dy=b.position.y-my;
-      const d=Math.sqrt(dx*dx+dy*dy);
-      if(d<110&&d>0){
-        const f=.0008*b.mass*(110-d);
-        Body.applyForce(b,b.position,{x:dx/d*f,y:dy/d*f});
-      }
-    });
   });
   hero.addEventListener('mouseleave',()=>{mx=-9999;my=-9999});
 
-  // 点击 - 在鼠标位置生成新球
-  hero.addEventListener('click',e=>{
-    if(e.target.closest('a,button'))return; // 按钮点击不生成
-    const rect=hero.getBoundingClientRect();
-    spawnBall(e.clientX-rect.left,e.clientY-rect.top);
-  });
-
-  // 持续补充球（堆稳定后从顶部继续掉，保持动态感）
-  setInterval(()=>{
-    if(balls.length<35){
-      spawnBall(80+Math.random()*(W-160),-60);
-    }
-  },2200);
-
   window.addEventListener('resize',resize);
   resize();
-  seedBalls(28);
-  loop();
+  draw();
 })();
 
 document.body.style.opacity='1';
